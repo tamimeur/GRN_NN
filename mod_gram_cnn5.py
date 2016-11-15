@@ -13,6 +13,7 @@ from keras.datasets import mnist
 from keras.layers import Merge
 from keras.regularizers import l1, l2, activity_l2
 import random
+import pandas as pd
 
 
 class LossHistory(cb.Callback):
@@ -57,6 +58,13 @@ def format_data(char_data, des):
 		Y_train.append([val])
 
 	return X_train, Y_train
+############# LOAD DATA - NBT PAPER ########
+pdata = pd.read_excel('nbt_sharon_pp.xlsx',header=0,parse_cols="C,G")
+
+
+print "Is YO DATA BOI!!! ", pdata
+print "length of data ", pdata.size
+
 
 ############# GENERATE LANGUAGE ############
 
@@ -173,3 +181,58 @@ print "Tru output is ", Fin_ytest
 
 # print "Weights = ", submodel.get_weights()
 # submodel.save_weights("submod.h5")
+
+################
+#   Genes
+################
+#   1  2  3  4 
+#   g0 g1 g2 g3
+################
+
+################
+#   Proms
+################
+#   1  2  3  4 
+#   p0 p1 p2 p3
+################
+
+##################
+#      S
+##################
+#   1   2    3   4 
+#   0 0.01  0.1  1
+##################
+
+
+
+#########################
+#       p0 g0 0
+#########################
+#       1   2   3   4   5
+#
+# d[1]  1  -1  -1  -1  -1
+#   s   1  -1  -1  -1  -1
+#########################
+
+########################
+#       p0 g0 1
+########################
+#       1  2  3  4  5
+#
+# d[1]  1  0  0  0  0
+#   s   0  0  0  0  1
+########################
+
+########################
+#       p1 g0 1
+########################
+#       1  2  3  4  5
+#
+# d[1]  0  1  0  0  0
+#   s   0  0  0  0  1
+########################
+
+
+
+
+

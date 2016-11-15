@@ -153,7 +153,7 @@ def get_data(cur_des,it):
     global design
     global s
     design = cur_des
-    inducer_vals = [0,0.001,0.01,0.1,1,10,100,1000]
+    inducer_vals = [0,0.001,0.01,0.1,1,10]
     inducer_cat = [-3,-2,-1,0,1,2,3] 
     #inducer_vals = np.arange(0, 100000, 10)
     ss_res = []
