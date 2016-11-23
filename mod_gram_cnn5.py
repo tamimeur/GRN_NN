@@ -30,7 +30,7 @@ class LossHistory(cb.Callback):
         self.losses.append(batch_loss)
 
 
-#np.random.seed(1337)
+np.random.seed(1337)
 X_train = []
 Y_train = []
 
@@ -83,6 +83,24 @@ df = pdata[np.isfinite(pdata[u' expression'])]
 def oneHotEncoder(seq):
 	base_dict = {u'A':[1,0,0,0],u'C':[0,1,0,0],u'G':[0,0,1,0],u'T':[0,0,0,1]}
 	return np.array([base_dict[x] for x in seq])
+def oneHotDecoder(encseq):
+	dec_seq = ""
+	#decode_dict = {[1,0,0,0]:u'A',[0,1,0,0]:u'C',[0,0,1,0]:u'G',[0,0,0,1]:u'T'}
+	for x in encseq:
+		# print "This is x : ", x
+		# np_test = np.array([0,1,0,0])
+		# print "Here's an np conv: ", np_test
+		# print "Testing equiv: ", (x==np_test).all()
+		if (x == np.array([1,0,0,0])).all():
+			dec_seq += u'A'
+		elif (x == np.array([0,1,0,0])).all():
+			dec_seq += u'C'
+		elif (x == np.array([0,0,1,0])).all():
+			dec_seq += u'G'
+		elif (x == np.array([0,0,0,1])).all():
+			dec_seq += u'T'
+	return dec_seq
+	#return np.array([decode_dict[x] for x in encseq])
 
 X_data = np.empty([len(df),150,4])
 indx = 0
@@ -151,57 +169,75 @@ g = g.plot_joint(plt.scatter, color='#9b59b6', edgecolor="white", alpha='0.1')
 sea.plt.show()
 #g = g.plot_marginals(sea.distplot, kde=False, color="#9b59b6")
 
-################
-#   Genes
-################
-#   1  2  3  4 
-#   g0 g1 g2 g3
-################
 
-################
-#   Proms
-################
-#   1  2  3  4 
-#   p0 p1 p2 p3
-################
+######## FIND THE SEQ with MAX EXP #######
 
-##################
-#      S
-##################
-#   1   2    3   4 
-#   0 0.01  0.1  1
-##################
+from scipy.optimize import basinhopping
+
+###### cos basinhopping example #######
+func = lambda x: np.cos(14.5 * x - 0.3) + (x + 0.2) * x
+x0=[1.]
+minimizer_kwargs = {"method": "BFGS"}
+ret = basinhopping(func, x0, minimizer_kwargs=minimizer_kwargs, niter=200)
+print("global minimum: x = %.4f, f(x0) = %.4f" % (ret.x, ret.fun))
+#######################################
 
 
+###### Find the max performing promoter ######
+###### in cur set of data test and train ######
+print "Searching for max prom: "
+print df[[u' expression']]
+maxindx=df[[u' expression']].idxmax()
+print "TRUE max index ", maxindx
+print "TRUE max value ", df.ix[maxindx]
+print "TRUE max sequence ", df[[u'sequence']].ix[maxindx]
 
-#########################
-#       p0 g0 0
-#########################
-#       1   2   3   4   5
-#
-# d[1]  1  -1  -1  -1  -1
-#   s   1  -1  -1  -1  -1
-#########################
+print "Searching for max prom in normed vals: "
+print "Norm test max indx: ", norm_test.argmax()
+print "Norm test max val: ", norm_test[norm_test.argmax()]
+print "Norm train max indx: ", norm_train.argmax()
+print "Norm train max val: ", norm_train[norm_train.argmax()]
 
-########################
-#       p0 g0 1
-########################
-#       1  2  3  4  5
-#
-# d[1]  1  0  0  0  0
-#   s   0  0  0  0  1
-########################
+# maxp = max(norm_test[norm_test.argmax()],norm_train[norm_train.argmax()])
+maxp = oneHotDecoder(X_test[norm_test.argmax()])
+print "Max promoter seq is: ", maxp
+### sadly the normed max doesn't match the true max from the data set, but whatever I guess.
+### OH! It actually is! There may be more than one promoter seq that is the same max val :)
+### we'll still start with the seq that is the normed max of the data set.
 
-########################
-#       p1 g0 1
-########################
-#       1  2  3  4  5
-#
-# d[1]  0  1  0  0  0
-#   s   0  0  0  0  1
-########################
+### now we need to vary 3mers and create new variants that don't already exist in the original dataset
+print "where is max normed prom in orig data set? ", df.loc[df[u'sequence'] == maxp]
+
+fake_isin_test = ""
+for i in range(0,150):
+	fake_isin_test += u'A'
+
+print len(fake_isin_test)
+print len(maxp)
+
+print "Check that fake_isin_test is not in original data set ", df.loc[df[u'sequence'] == fake_isin_test].empty
+
+new_promoters = []
+
+# def gen_new_seq(parent_seq, generation, fixed_child_num, base_indx):
+# 	bases = [u'A',u'T',u'C',u'G']
 
 
+start_seq = maxp
+start_indx = 19
+start_gen = 0
+num_child = 1
+bases = [u'A',u'T',u'C',u'G']
 
+# for j in range(0,10):
+# 	new_promoters.append(gen_new_seq(start_seq, start_gen, num_child, start_indx))
+
+# j = start_indx
+# while j < len(start_seq):
+# 	new_prom = start_seq
+
+# 	new_prom[j] = random.choice(bases)
+# 	new_promoters.append[]
+# 	j++
 
 
