@@ -222,6 +222,11 @@ new_promoters = []
 # def gen_new_seq(parent_seq, generation, fixed_child_num, base_indx):
 # 	bases = [u'A',u'T',u'C',u'G']
 
+print "old maxp = ", maxp
+listmaxp = list(maxp)
+listmaxp[0] = u'A'
+newmaxp = "".join(listmaxp)
+print "new maxp = ", newmaxp
 
 start_seq = maxp
 start_indx = 19
@@ -231,6 +236,23 @@ bases = [u'A',u'T',u'C',u'G']
 
 # for j in range(0,10):
 # 	new_promoters.append(gen_new_seq(start_seq, start_gen, num_child, start_indx))
+
+#19 - 127 available indexes to start base mutations
+for j in range(0,100):
+	base_idx = random.randint(19,127)
+	new_seq = list(start_seq)
+	for k in range(0,5):
+		new_seq[base_idx] = random.choice(bases)
+		new_seq[base_idx+1] = random.choice(bases)
+		new_seq[base_idx+2] = random.choice(bases)
+		strnew_seq = "".join(new_seq)
+		if df.loc[df[u'sequence'] == strnew_seq].empty :
+			start_seq = strnew_seq
+			new_promoters.append(strnew_seq)
+
+
+print new_promoters
+print "New Promoters len ", len(new_promoters)
 
 # j = start_indx
 # while j < len(start_seq):
