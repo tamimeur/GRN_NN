@@ -200,7 +200,18 @@ print "Norm train max val: ", norm_train[norm_train.argmax()]
 print "Predicted max indx: ", predicted.argmax()
 print "Predicted max val: ", predicted[predicted.argmax()]
 
-# maxp = max(norm_test[norm_test.argmax()],norm_train[norm_train.argmax()])
+##########Creating lists for final generational promoter plot#################
+fin_seq_indx = []
+fin_exp = []
+fin_gen = []
+
+for prom in range(0,len(predicted)):
+	fin_seq_indx.append(prom)
+	fin_exp.append(predicted[prom])
+	fin_gen.append(0)
+###############################################################################
+
+
 
 maxp = oneHotDecoder(X_test[predicted.argmax()])
 print "Max promoter seq is: ", maxp
@@ -251,7 +262,7 @@ for gen in range(0,num_generations):
 	print "New Promoters len ", len(new_promoters)
 
 	##### format new promoter sequences as CNN input for prediction ####
-	Z_test = np.empty([len(df),150,4])
+	Z_test = np.empty([len(new_promoters),150,4])
 	indx = 0
 	for seq in new_promoters:
 		Z_test[indx] = oneHotEncoder(seq)
@@ -266,5 +277,22 @@ for gen in range(0,num_generations):
 	new_promoters = []
 	start_seq = newp
 
+	if(gen!=0 and gen%2==0):
+		################### #######################
+		for prom in range(0,len(Zpredicted)):
+			fin_seq_indx.append(prom)
+			fin_exp.append(Zpredicted[prom])
+			fin_gen.append(gen)
+		###########################################
 
 
+
+
+#print "FIN GEN PLOT LIST: \n",fin_seq_indx,"\n", fin_exp,"\n",fin_gen
+sequence_variant=list(fin_seq_indx)
+expression_level=list(fin_exp)
+generation = list(fin_gen)
+
+genpltdf = pd.DataFrame(dict(sequence_variant=sequence_variant, expression_level=expression_level, generation=generation))
+sea.lmplot('sequence_variant','expression_level',data=genpltdf,hue='generation',fit_reg=False)
+sea.plt.show()
