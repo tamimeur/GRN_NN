@@ -151,7 +151,7 @@ model.compile(loss='mean_squared_logarithmic_error', optimizer=rms)
 model.fit(X_train, norm_train, batch_size=128, nb_epoch=6, verbose=1)
 
 
-########### RESULTS ##############
+########### NN TRAINING RESULTS ##############
 
 norm_test = preprocessing.StandardScaler().fit_transform(y_test)
 predicted = model.predict(X_test) #.reshape(-1)
@@ -197,10 +197,15 @@ print "Norm test max indx: ", norm_test.argmax()
 print "Norm test max val: ", norm_test[norm_test.argmax()]
 print "Norm train max indx: ", norm_train.argmax()
 print "Norm train max val: ", norm_train[norm_train.argmax()]
+print "Predicted max indx: ", predicted.argmax()
+print "Predicted max val: ", predicted[predicted.argmax()]
 
 # maxp = max(norm_test[norm_test.argmax()],norm_train[norm_train.argmax()])
-maxp = oneHotDecoder(X_test[norm_test.argmax()])
+
+maxp = oneHotDecoder(X_test[predicted.argmax()])
 print "Max promoter seq is: ", maxp
+#GGGGACCAGGTGCCGTAAGCTGTTGAATGGCACTAAATCGGAACCCTAAAGGGAGCCCCCGATTTAGAGCTTGACGGCGGAAGACTCTCCTCCGGGCGCGGAAGACTCTCCTCCGCGGAAGACTCTCCTCCGGCGATCCTAGGGCGATCA
+
 ### sadly the normed max doesn't match the true max from the data set, but whatever I guess.
 ### OH! It actually is! There may be more than one promoter seq that is the same max val :)
 ### we'll still start with the seq that is the normed max of the data set.
@@ -217,49 +222,49 @@ print len(maxp)
 
 print "Check that fake_isin_test is not in original data set ", df.loc[df[u'sequence'] == fake_isin_test].empty
 
+#GENERATION 1
 new_promoters = []
-
-# def gen_new_seq(parent_seq, generation, fixed_child_num, base_indx):
-# 	bases = [u'A',u'T',u'C',u'G']
-
-print "old maxp = ", maxp
-listmaxp = list(maxp)
-listmaxp[0] = u'A'
-newmaxp = "".join(listmaxp)
-print "new maxp = ", newmaxp
-
 start_seq = maxp
+
 start_indx = 19
 start_gen = 0
-num_child = 1
+num_generations = 30
 bases = [u'A',u'T',u'C',u'G']
-
-# for j in range(0,10):
-# 	new_promoters.append(gen_new_seq(start_seq, start_gen, num_child, start_indx))
-
 #19 - 127 available indexes to start base mutations
-for j in range(0,100):
-	base_idx = random.randint(19,127)
-	new_seq = list(start_seq)
-	for k in range(0,5):
-		new_seq[base_idx] = random.choice(bases)
-		new_seq[base_idx+1] = random.choice(bases)
-		new_seq[base_idx+2] = random.choice(bases)
-		strnew_seq = "".join(new_seq)
-		if df.loc[df[u'sequence'] == strnew_seq].empty :
-			start_seq = strnew_seq
-			new_promoters.append(strnew_seq)
+
+for gen in range(0,num_generations):
+	print " ======== GENERATION ", gen, "==========="
+	for j in range(0,200):
+		base_idx = np.random.randint(19,127)
+		new_seq = list(start_seq)
+		for k in range(0,5):
+			new_seq[base_idx] = np.random.choice(bases)
+			new_seq[base_idx+1] = np.random.choice(bases)
+			new_seq[base_idx+2] = np.random.choice(bases)
+			strnew_seq = "".join(new_seq)
+			if df.loc[df[u'sequence'] == strnew_seq].empty :
+				#start_seq = strnew_seq
+				new_promoters.append(strnew_seq)
 
 
-print new_promoters
-print "New Promoters len ", len(new_promoters)
+	#print new_promoters
+	print "New Promoters len ", len(new_promoters)
 
-# j = start_indx
-# while j < len(start_seq):
-# 	new_prom = start_seq
+	##### format new promoter sequences as CNN input for prediction ####
+	Z_test = np.empty([len(df),150,4])
+	indx = 0
+	for seq in new_promoters:
+		Z_test[indx] = oneHotEncoder(seq)
+		indx += 1
 
-# 	new_prom[j] = random.choice(bases)
-# 	new_promoters.append[]
-# 	j++
+	#print "CNN input \n", Z_test, len(Z_test)
+	Zpredicted = model.predict(Z_test)
+	newp = new_promoters[Zpredicted.argmax()]
+	print "Max exp of new designs = ", max(Zpredicted)
+	print "Index of max exp prom = ", Zpredicted.argmax()
+	print "Sequ of max prom = ", newp
+	new_promoters = []
+	start_seq = newp
+
 
 
