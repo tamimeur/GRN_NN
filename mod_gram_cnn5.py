@@ -19,6 +19,7 @@ from sklearn.cross_validation import train_test_split
 from sklearn import preprocessing
 import scipy.stats as stats
 import seaborn as sea
+import plotly.plotly as py
 
 
 class LossHistory(cb.Callback):
@@ -207,7 +208,7 @@ fin_gen = []
 
 for prom in range(0,len(predicted)):
 	fin_seq_indx.append(prom)
-	fin_exp.append(predicted[prom])
+	fin_exp.append(predicted[prom][0])
 	fin_gen.append(0)
 ###############################################################################
 
@@ -277,14 +278,19 @@ for gen in range(0,num_generations):
 	new_promoters = []
 	start_seq = newp
 
-	if(gen!=0 and gen%2==0):
+	if(gen%2==0):
+	#if(gen!=0 and gen%2==0):
+	#if(gen!=0):
+	#print "Zpredicted for gen ", gen, " = \n", Zpredicted.reshape(-1)
 		################### #######################
 		for prom in range(0,len(Zpredicted)):
 			fin_seq_indx.append(prom)
-			fin_exp.append(Zpredicted[prom])
+			fin_exp.append(Zpredicted.reshape(-1)[prom])
 			fin_gen.append(gen)
 		###########################################
 
+print "len exp ", len(fin_exp)
+print "len gen ", len(fin_gen)
 
 
 
@@ -293,6 +299,40 @@ sequence_variant=list(fin_seq_indx)
 expression_level=list(fin_exp)
 generation = list(fin_gen)
 
-genpltdf = pd.DataFrame(dict(sequence_variant=sequence_variant, expression_level=expression_level, generation=generation))
-sea.lmplot('sequence_variant','expression_level',data=genpltdf,hue='generation',fit_reg=False)
+print "len expression_level ", len(expression_level)
+print "len generation ", len(generation)
+
+#genpltdf = pd.DataFrame(dict(sequence_variant=sequence_variant, expression_level=expression_level, generation=generation))
+genpltdf = pd.DataFrame(dict(expression_level=expression_level, generation=generation))
+#print "expression level list: ", expression_level
+#print "generation list: ", generation
+print "df: ", genpltdf
+
+#sea.lmplot('sequence_variant','expression_level',data=genpltdf,hue='generation',fit_reg=False)
+
+#sea.swarmplot(x='generation',y='expression_level',data=genpltdf,hue='generation')
+genpl=sea.violinplot(x='generation',y='expression_level',data=genpltdf,hue='generation', width = 7)
+axes = genpl.axes
+axes.set_ylim(0,)
 sea.plt.show()
+
+# N = num_generations / 2
+
+# c = ['hsl('+str(h)+',50%'+',50%)' for h in linspace(0, 360, N)]
+
+# data = [{
+#     'y': expression_level, 
+#     'type':'box',
+#     'marker':{'color': c[i]}
+#     } for i in range(int(N))]
+
+# # format the layout
+# layout = {'xaxis': {'showgrid':False,'zeroline':False, 'tickangle':60,'showticklabels':False},
+#           'yaxis': {'zeroline':False,'gridcolor':'white'},
+#           'paper_bgcolor': 'rgb(233,233,233)',
+#           'plot_bgcolor': 'rgb(233,233,233)',
+#           }
+
+# py.iplot(data)
+
+
