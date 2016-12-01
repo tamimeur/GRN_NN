@@ -1,6 +1,6 @@
 #import grn_feedfwd as ffn
-import parse_input
-import bandpass_simple4 as lab
+#import parse_input
+#bandpass_simple4 as lab
 import time
 import numpy as np
 from matplotlib import pyplot as plt
@@ -278,7 +278,7 @@ for gen in range(0,num_generations):
 	new_promoters = []
 	start_seq = newp
 
-	if(gen%2==0):
+	if(gen%3==0):
 	#if(gen!=0 and gen%2==0):
 	#if(gen!=0):
 	#print "Zpredicted for gen ", gen, " = \n", Zpredicted.reshape(-1)
@@ -296,14 +296,14 @@ print "len gen ", len(fin_gen)
 
 #print "FIN GEN PLOT LIST: \n",fin_seq_indx,"\n", fin_exp,"\n",fin_gen
 sequence_variant=list(fin_seq_indx)
-expression_level=list(fin_exp)
+strength=list(fin_exp)
 generation = list(fin_gen)
 
-print "len expression_level ", len(expression_level)
+print "len expression_level ", len(strength)
 print "len generation ", len(generation)
 
 #genpltdf = pd.DataFrame(dict(sequence_variant=sequence_variant, expression_level=expression_level, generation=generation))
-genpltdf = pd.DataFrame(dict(expression_level=expression_level, generation=generation))
+genpltdf = pd.DataFrame(dict(strength=strength, generation=generation))
 #print "expression level list: ", expression_level
 #print "generation list: ", generation
 print "df: ", genpltdf
@@ -311,9 +311,11 @@ print "df: ", genpltdf
 #sea.lmplot('sequence_variant','expression_level',data=genpltdf,hue='generation',fit_reg=False)
 
 #sea.swarmplot(x='generation',y='expression_level',data=genpltdf,hue='generation')
-genpl=sea.violinplot(x='generation',y='expression_level',data=genpltdf,hue='generation', width = 7)
+#genpl=sea.violinplot(x='generation',y='expression_level',data=genpltdf,hue='generation', width = 7)
+genpl=sea.boxplot(x='generation',y='strength',data=genpltdf,hue='generation', width = 1)
 axes = genpl.axes
 axes.set_ylim(0,)
+axes.set_title('Predicted Promoter Strengths Across Generations of 3mer Mutations ')
 sea.plt.show()
 
 # N = num_generations / 2
