@@ -208,7 +208,7 @@ for seq in rawdata[u'sequence']:
 	X_data[indx] = oneHotEncoder(seq)
 	indx += 1
 #fix
-#Y_data = np.array(df[[u' expression']])
+#Y_data = np.array(rawdata[[u'Bfl1']])
 Y_data = np.empty([len(rawdata),6])
 for i in range(0,rawdata.shape[0]):
 	bfl1 = rawdata[u'Bfl1'][i] 
@@ -237,10 +237,10 @@ print "len Y test:  \n", len(y_test)
 model = Sequential()
 model.add(Convolution1D(nb_filter=50,filter_length=6,input_dim=22,input_length=117,border_mode="same", activation='relu'))
 model.add(Dropout(0.3))
-#model.add(Convolution1D(nb_filter=50,filter_length=6,input_dim=22,input_length=117,border_mode="same", activation='relu'))
+model.add(Convolution1D(nb_filter=50,filter_length=6,input_dim=22,input_length=117,border_mode="same", activation='relu'))
 #model.add(Dropout(0.3))
 #model.add(Convolution1D(nb_filter=50,filter_length=6,input_dim=22,input_length=117,border_mode="same", activation='relu'))
-
+model.add(MaxPooling1D(pool_length=2, stride=None, border_mode='valid'))
 model.add(Flatten())
 
 model.add(Dense(40))
@@ -249,6 +249,9 @@ model.add(Activation('relu'))
 
 model.add(Dense(6))
 model.add(Activation('softmax'))
+# model.add(Dense(1))
+# model.add(Activation('sigmoid'))
+
 
 #compile the model
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
@@ -256,7 +259,7 @@ adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 rms = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08)
 #model.compile(loss='mean_squared_logarithmic_error', optimizer=rms)
 model.compile(loss='categorical_crossentropy', optimizer=rms)
-
+#model.compile(loss='mean_squared_logarithmic_error', optimizer=rms)
 #print 'Model compiled in {0} seconds'.format(time.time() - start_time)
 
 #train the model
