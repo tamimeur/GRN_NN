@@ -65,15 +65,60 @@ def format_data(char_data, des):
 
 	return X_train, Y_train
 
+naive_protein = "ADPKKVLDKAKDRAENVVRKLKKELEELYKEARKLDLTQEMRDRIRLAAIAARIAAFGDIFHAIMEALEEARKLKKAGLVNSQQLDELKRRLEELDEEAAQRAEKLGKEFELKLEYG"
 
-############# LOAD DATA - NBT PAPER ########
-pdata = pd.read_excel('nbt_sharon_pp.xlsx',header=0,parse_cols="C,G")
+############# LOAD DATA - DY BINDING DATASET ########
+rawdata = pd.read_excel('dy_binding_data.xlsx',header=0,parse_cols="L,M,C,D,E,F,G,H")
 
 
-print "Is YO DATA BOI!!! \n", pdata
-#print "length of data ", pdata.size
-print pdata.columns
-df = pdata[np.isfinite(pdata[u' expression'])]
+print "Is YO DATA BOI!!! \n", rawdata
+print rawdata.columns
+
+################ CLEAN/FORMAT DATA  #################
+#maybe edit the mutation column in rawdata and later remove the position col
+#ok make a function that passes this dataframe and returns a list of sequences, 
+#then add the list to the df
+
+def mutation_to_sequence(rawdf):
+	protein_seq=[]
+	indx = 0
+	protein_seq.append(naive_protein)
+	print rawdf.shape[0]
+	# mut_seq = list(naive_protein)
+	# print mut_seq
+	# print mut_seq[rawdf[u'position'][1]]
+	# mut_seq[rawdf[u'position'][1]] = rawdf[u'mutation'][1]
+	# print mut_seq[rawdf[u'position'][1]]
+	# print "length of naive prot = ", len(naive_protein)
+
+	for indx in range(1,rawdf.shape[0]):
+		mut_seq = list(naive_protein)
+		mut_seq[(rawdf[u'position'][indx])-1] = str(rawdf[u'mutation'][indx])
+		protein_seq.append(''.join(mut_seq))
+
+	return protein_seq
+
+seq_list = mutation_to_sequence(rawdata)
+#print "List of mutations as sequences: ", seq_list
+
+rawdata[u"sequence"]=pd.Series(seq_list).values
+
+print "New raw data: \n ", rawdata
+
+#shuffle data
+rawdata = rawdata.iloc[np.random.permutation(len(rawdata))]
+
+print "Shuffled raw data: \n ", rawdata
+
+
+# print "len expression_level ", len(strength)
+# print "len generation ", len(generation)
+
+# genpltdf = pd.DataFrame(dict(strength=strength, generation=generation))
+# print "df: ", genpltdf
+
+
+#df = pdata[np.isfinite(pdata[u' expression'])]
 
 # print "cleaned data \n", df
 # print "length of cleaned data ", df.size
@@ -82,35 +127,97 @@ df = pdata[np.isfinite(pdata[u' expression'])]
 ############# Format NN inputs #############
 
 def oneHotEncoder(seq):
-	base_dict = {u'A':[1,0,0,0],u'C':[0,1,0,0],u'G':[0,0,1,0],u'T':[0,0,0,1]}
+	base_dict = {'A':[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+	'V':[0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+	'I':[0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+	'L':[0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+	'M':[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+	'F':[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+	'Y':[0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+	'W':[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+	'S':[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+	'T':[0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0],
+	'N':[0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+	'Q':[0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
+	'C':[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
+	'U':[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
+	'G':[0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+	'P':[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
+	'R':[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0],
+	'H':[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],
+	'K':[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
+	'D':[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0],
+	'E':[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0],
+	'*':[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]}
 	return np.array([base_dict[x] for x in seq])
+
 def oneHotDecoder(encseq):
 	dec_seq = ""
-	#decode_dict = {[1,0,0,0]:u'A',[0,1,0,0]:u'C',[0,0,1,0]:u'G',[0,0,0,1]:u'T'}
 	for x in encseq:
-		# print "This is x : ", x
-		# np_test = np.array([0,1,0,0])
-		# print "Here's an np conv: ", np_test
-		# print "Testing equiv: ", (x==np_test).all()
-		if (x == np.array([1,0,0,0])).all():
-			dec_seq += u'A'
-		elif (x == np.array([0,1,0,0])).all():
-			dec_seq += u'C'
-		elif (x == np.array([0,0,1,0])).all():
-			dec_seq += u'G'
-		elif (x == np.array([0,0,0,1])).all():
-			dec_seq += u'T'
+		if (x == np.array([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'A'
+		elif (x == np.array([0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'V'
+		elif (x == np.array([0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'I'
+		elif (x == np.array([0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'L'
+		elif (x == np.array([0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'M'
+		elif (x == np.array([0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'F'
+		elif (x == np.array([0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'Y'
+		elif (x == np.array([0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'W'
+		elif (x == np.array([0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'S'
+		elif (x == np.array([0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'T'
+		elif (x == np.array([0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'N'
+		elif (x == np.array([0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'Q'
+		elif (x == np.array([0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'C'
+		elif (x == np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0])).all():
+			dec_seq += 'U'
+		elif (x == np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0])).all():
+			dec_seq += 'G'
+		elif (x == np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0])).all():
+			dec_seq += 'P'
+		elif (x == np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0])).all():
+			dec_seq += 'R'
+		elif (x == np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0])).all():
+			dec_seq += 'H'
+		elif (x == np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0])).all():
+			dec_seq += 'K'
+		elif (x == np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0])).all():
+			dec_seq += 'D'
+		elif (x == np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0])).all():
+			dec_seq += 'E'
+		elif (x == np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1])).all():
+			dec_seq += '*'
 	return dec_seq
 	#return np.array([decode_dict[x] for x in encseq])
 
-X_data = np.empty([len(df),150,4])
+X_data = np.empty([len(rawdata),117,22])
+
 indx = 0
-
-Y_data = np.array(df[[u' expression']])
-
-for seq in df[u'sequence']:
+for seq in rawdata[u'sequence']:
 	X_data[indx] = oneHotEncoder(seq)
 	indx += 1
+#fix
+#Y_data = np.array(df[[u' expression']])
+Y_data = np.empty([len(rawdata),6])
+for i in range(0,rawdata.shape[0]):
+	bfl1 = rawdata[u'Bfl1'][i] 
+	bclb = rawdata[u'BclB'][i] 
+	bcl2 = rawdata[u'Bcl2'][i] 
+	bclxl = rawdata[u'BclXL'][i] 
+	bclw = rawdata[u'BclW'][i] 
+	mcl1 = rawdata[u'Mcl1'][i] 
+	Y_data[i] = np.array([bfl1,bclb,bcl2,bclxl,bclw,mcl1])
 
 print "CNN input \n", X_data
 print "CNN output \n", Y_data
@@ -118,7 +225,7 @@ print "CNN output \n", Y_data
 
 ########## RANDOM TEST/TRAIN SPLIT #########
 X_train, X_test, y_train, y_test = train_test_split(X_data, Y_data, test_size=0.15, random_state=42)
-norm_train = preprocessing.StandardScaler().fit_transform(y_train)
+#norm_train = preprocessing.StandardScaler().fit_transform(y_train)
 print "len X train: \n", len(X_train)
 print "len Y train: \n", len(y_train)
 print "len X test:  \n", len(X_test)
@@ -128,9 +235,11 @@ print "len Y test:  \n", len(y_test)
 ############# TRAIN NN ############
 #start_time = time.time()
 model = Sequential()
-model.add(Convolution1D(nb_filter=30,filter_length=6,input_dim=4,input_length=150,border_mode="same", activation='relu'))
-model.add(Dropout(0.1))
-model.add(Convolution1D(nb_filter=40,filter_length=6,input_dim=4,input_length=150,border_mode="same", activation='relu'))
+model.add(Convolution1D(nb_filter=50,filter_length=6,input_dim=22,input_length=117,border_mode="same", activation='relu'))
+model.add(Dropout(0.3))
+#model.add(Convolution1D(nb_filter=50,filter_length=6,input_dim=22,input_length=117,border_mode="same", activation='relu'))
+#model.add(Dropout(0.3))
+#model.add(Convolution1D(nb_filter=50,filter_length=6,input_dim=22,input_length=117,border_mode="same", activation='relu'))
 
 model.add(Flatten())
 
@@ -138,40 +247,43 @@ model.add(Dense(40))
 model.add(Dropout(0.2))
 model.add(Activation('relu'))
 
-model.add(Dense(1))
-model.add(Activation('linear'))
+model.add(Dense(6))
+model.add(Activation('softmax'))
 
 #compile the model
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 #model.compile(loss='mean_squared_error', optimizer=adam)
 rms = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08)
-model.compile(loss='mean_squared_logarithmic_error', optimizer=rms)
+#model.compile(loss='mean_squared_logarithmic_error', optimizer=rms)
+model.compile(loss='categorical_crossentropy', optimizer=rms)
+
 #print 'Model compiled in {0} seconds'.format(time.time() - start_time)
 
 #train the model
-model.fit(X_train, norm_train, batch_size=128, nb_epoch=6, verbose=1)
+#model.fit(X_train, norm_train, batch_size=32, nb_epoch=6, verbose=1)
+model.fit(X_train, y_train, batch_size=128, nb_epoch=10, verbose=1)
 
 
 ########### NN TRAINING RESULTS ##############
 
 norm_test = preprocessing.StandardScaler().fit_transform(y_test)
 predicted = model.predict(X_test) #.reshape(-1)
-print "NORMED TEST: ", len(norm_test)
-print "PREDICTED: ", len(predicted)
-slope, intercept, r_value, p_value, std_err = stats.linregress(norm_test.reshape(-1),predicted.reshape(-1))
+print "TEST OUTPUTS: \n", y_test
+print "PREDICTED: \n", predicted
+#slope, intercept, r_value, p_value, std_err = stats.linregress(norm_test.reshape(-1),predicted.reshape(-1))
+
+slope, intercept, r_value, p_value, std_err = stats.linregress(y_test.reshape(-1),predicted.reshape(-1))
 print r_value**2
 
-d = {'y_pred': predicted.reshape(-1), 'y_actual': norm_test.reshape(-1)}
+d = {'y_pred': predicted.reshape(-1), 'y_actual': y_test.reshape(-1)}
 res_df = pd.DataFrame(data=d)
 
 sea.set(style="ticks", color_codes=True)
-g = sea.JointGrid(predicted.reshape(-1),norm_test.reshape(-1)) #, xlim=(-3,3), ylim=(-3,3))
+g = sea.JointGrid(predicted.reshape(-1),y_test.reshape(-1)) #, xlim=(-3,3), ylim=(-3,3))
 g = g.plot_joint(plt.scatter, color='#9b59b6', edgecolor="white", alpha='0.1')
 # axes = g.axes
 # axes.set_xlim(-1,5)
 # axes.set_ylim(-1,5)
-g.ax_joint.set_xticks([-1, 5, -1,0,1,2,3,4,5])
-g.ax_joint.set_yticks([-1, 5, -1,0,1,2,3,4,5])
 sea.plt.show()
 #g = g.plot_marginals(sea.distplot, kde=False, color="#9b59b6")
 
@@ -317,10 +429,10 @@ print "df: ", genpltdf
 
 #sea.swarmplot(x='generation',y='expression_level',data=genpltdf,hue='generation')
 #genpl=sea.violinplot(x='generation',y='expression_level',data=genpltdf,hue='generation', width = 7)
-genpl=sea.boxplot(x='generation',y='strength',data=genpltdf,hue='generation', width = 1.1)
+genpl=sea.boxplot(x='generation',y='strength',data=genpltdf,hue='generation', width = 1)
 axes = genpl.axes
+#axes.set_aspect(1.5)
 axes.set_ylim(0,)
-axes.set_aspect(1.5)
 #axes.set_title('Predicted Promoter Strengths Across Generations of 3mer Mutations ')
 sea.plt.show()
 
