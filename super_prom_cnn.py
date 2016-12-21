@@ -175,6 +175,89 @@ g.ax_joint.set_yticks([-1, 5, -1,0,1,2,3,4,5])
 sea.plt.show()
 #g = g.plot_marginals(sea.distplot, kde=False, color="#9b59b6")
 
+########## FOR PLOTTING A HEATMAP ###############
+#first find a sequence that's exp level is the median (0)
+#to do this I make a copy of norm_test ... make all values abs(norm_test)
+#and then take the min expression. But I need to keep track 
+#of the x_test it's related to because that sequence will be our base seq
+#from which all mutations in the heat map will be relative to.
+
+norm_test_abs = np.copy(norm_test)
+np.absolute(norm_test)
+min_indx = np.argmin(norm_test)
+base_HM_val = norm_test[min_indx]
+print "Minimut NORM TEST VALUE ", base_HM_val
+base_HM_seq = list(str(oneHotDecoder(X_test[min_indx])))
+print "Seq with this exp val is: ", base_HM_seq
+sub_base_HM_seq = list(base_HM_seq[19:127])
+start_base_HM_seq = list(base_HM_seq[0:19])
+end_base_HM_seq = list(base_HM_seq[127:(len(base_HM_seq))])
+
+print "Lengths base, start, end seq's: ", len(sub_base_HM_seq), len(start_base_HM_seq), len(end_base_HM_seq)
+
+# print "start chunk of the seq: ", start_base_HM_seq
+# print "middle chunk of the seq: ", sub_base_HM_seq
+# print "end chunk of the seq: ", end_base_HM_seq
+# sub_base_HM_seq.extend(end_base_HM_seq)
+# start_base_HM_seq.extend(sub_base_HM_seq)
+
+# print "rebuilt seq: ", start_base_HM_seq
+# print "\n\n\n"
+# ##GGGGACCAGGTGCCGTAAGACTCACGGGCGCACTAAATCGGAACCCTAAAGGGAGCCGGAACCGGCGAGCTTGACGGGGAAAGCCATGTAATTACC|T|AATAGGGAAATTTACACGATTTTTTTTTTTTTTTAGCGATCCTAGGGCGATCA##
+# print "test of test (expect True) : ", ['a','b','c'] == ['a','b','c']
+# print "test of test (expect False) : ", ['a','d','c'] == ['a','b','c']
+
+# print "Test splitting of seq (expect True) : ", base_HM_seq == start_base_HM_seq, len(base_HM_seq), len(start_base_HM_seq)
+
+pos_HM = []
+mut_HM = []
+val_HM = []
+
+base_seq_indx = 0
+
+for base in sub_base_HM_seq:
+	bases = ['A','C','T','G']
+	bases.remove(base)
+	for mut in bases:
+		pos_HM.append(base_seq_indx)
+		mut_HM.append(mut)
+		mut_seq = list(sub_base_HM_seq)
+		mut_seq[base_seq_indx] = mut
+		
+		cpy_mut_seq = list(mut_seq)
+		cpy_start_base_HM_seq = list(start_base_HM_seq)
+		cpy_end_base_HM_seq = list(end_base_HM_seq)
+
+		#print "Lengths base, start, end seq's: ", len(cpy_mut_seq), len(cpy_start_base_HM_seq), len(cpy_end_base_HM_seq)
+
+		cpy_mut_seq.extend(cpy_end_base_HM_seq)
+		cpy_start_base_HM_seq.extend(cpy_mut_seq)
+
+		mut_seq = list(cpy_start_base_HM_seq)
+		#print "LENGTH CHECK OF MUT SEQ: ",len(mut_seq), len(base_HM_seq) 
+		X_mutdata = np.empty([1,150,4])
+		X_mutdata[0] = oneHotEncoder(mut_seq)
+		print "MUT SEQ: ", str(mut_seq)
+		mut_exp = model.predict(X_mutdata)
+		print "Pred EXP: ", mut_exp
+		val_HM.append((mut_exp - base_HM_val).reshape(-1)[0])
+		print "Pred VAL: ", mut_exp - base_HM_val, "\n"
+	base_seq_indx += 1
+
+print "################ HEAT MAP LISTS ################\n\n\n"
+print "\nposHM: \n", pos_HM
+print "\nmutHM: \n", mut_HM
+print "\nvalHM: \n", val_HM
+
+genHMdf = pd.DataFrame({'position': pos_HM, 'mutation': mut_HM, 'value': val_HM})
+result = genHMdf.pivot(index='position', columns='mutation', values='value')
+ax = sea.heatmap(result)
+sea.plt.show()
+
+#now generate a full library of single point mutations off of this base_HM_seq
+#Y : position
+#X : mutation
+#val : NN exp output for the seq - exp of base_HM_seq
 
 ######## FIND THE SEQ with MAX EXP #######
 
@@ -229,6 +312,8 @@ print "Max promoter seq is: ", maxp
 
 ### now we need to vary 3mers and create new variants that don't already exist in the original dataset
 print "where is max normed prom in orig data set? ", df.loc[df[u'sequence'] == maxp]
+#print "where is median normed prom in orig data set? (we just need one) ", df.loc[df[u' expression'] == 0]
+#print "JUST FOR KICKS: \n", df
 
 fake_isin_test = ""
 for i in range(0,150):
