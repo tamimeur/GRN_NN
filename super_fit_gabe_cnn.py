@@ -8,7 +8,7 @@ from keras.utils import np_utils
 import keras.callbacks as cb
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
-from keras.optimizers import RMSprop, SGD, Adam
+from keras.optimizers import RMSprop, SGD, Adam, Nadam
 from keras.datasets import mnist
 from keras.layers import Merge
 from keras.regularizers import l1, l2, activity_l2
@@ -278,12 +278,17 @@ print "len Y test:  \n", len(y_test)
 ############# TRAIN NN ############
 #start_time = time.time()
 model = Sequential()
-model.add(Convolution1D(nb_filter=20,filter_length=3,input_dim=20,input_length=43,border_mode="same", activation='relu', subsample_length=1))
-model.add(Dropout(0.2))
+model.add(Convolution1D(nb_filter=32,filter_length=3,input_dim=20,input_length=43,border_mode='valid', activation='relu'))#, subsample_length=1))
+#model.add(Dropout(0.2))
 #model.add(MaxPooling1D(pool_length=2, stride=None, border_mode='valid'))
-model.add(Convolution1D(nb_filter=20,filter_length=21,input_dim=20,input_length=43,border_mode="same", activation='relu', subsample_length=4))
-model.add(Dropout(0.2))
-model.add(MaxPooling1D(pool_length=2, stride=None, border_mode='valid'))
+
+model.add(Convolution1D(nb_filter=32,filter_length=3,input_dim=20,input_length=43, activation='relu'))#, subsample_length=4))
+model.add(MaxPooling1D(pool_length=2))
+model.add(Dropout(0.25))
+
+# model.add(Convolution1D(nb_filter=32,filter_length=3,input_dim=20,input_length=43,border_mode="same", activation='relu')) #, subsample_length=9))
+# model.add(Dropout(0.2))
+# model.add(MaxPooling1D(pool_length=2, stride=None, border_mode='valid'))
 
 # model.add(Convolution1D(nb_filter=100,filter_length=24,input_dim=20,input_length=43,border_mode="same", activation='relu'))
 # model.add(Dropout(0.1))
@@ -294,9 +299,13 @@ model.add(MaxPooling1D(pool_length=2, stride=None, border_mode='valid'))
 
 model.add(Flatten())
 
-model.add(Dense(40))
-model.add(Dropout(0.2))
+model.add(Dense(128))
 model.add(Activation('relu'))
+model.add(Dropout(0.5))
+
+model.add(Dense(32))
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
 
 # model.add(Dense(6))
 # model.add(Activation('softmax'))
@@ -308,14 +317,16 @@ model.add(Activation('linear'))
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 #model.compile(loss='mean_squared_error', optimizer=adam)
 rms = RMSprop(lr=0.001, rho=0.9, epsilon=1e-08)
+nadam = Nadam(lr=0.002, beta_1=0.9, beta_2=0.999, epsilon=1e-08, schedule_decay=0.004)
 #model.compile(loss='mean_squared_logarithmic_error', optimizer=rms)
 #model.compile(loss='categorical_crossentropy', optimizer=rms)
-model.compile(loss='mean_squared_error', optimizer=rms)
+opt = SGD(lr=0.001)
+model.compile(loss='mean_squared_error', optimizer=nadam, metrics=['accuracy'])
 #print 'Model compiled in {0} seconds'.format(time.time() - start_time)
 
 #train the model
 #model.fit(X_train, norm_train, batch_size=32, nb_epoch=6, verbose=1)
-model.fit(X_train, norm_train, batch_size=32, nb_epoch=20, verbose=1)
+model.fit(X_train, norm_train, batch_size=128, nb_epoch=15, verbose=1)
 
 
 ########### NN TRAINING RESULTS ##############
