@@ -41,15 +41,59 @@ Y_test = []
 
 
 ############# LOAD DATA - DY BINDING DATASET ########
-metrics = pd.read_excel('GJR_design_metrics_161227.xls',header=0,parse_cols="C,E,G,I,K,N,O,P,S,T,W,Z,AB,AH,AJ,AK,AL,AM,AU,AV,AW,AX,AY,BA,BC,BF,BG,BJ,BM,BO,BP,BQ,BR,BS,CC,CE,CF,CG,CH,CI,CM,CN,CP,CT,CU,CX,DA,DD,DH")
+metrics = pd.read_excel('GJR_design_metrics_161227.xls',header=0,parse_cols="C,E,G,I,K,N,O,P,S,T,W,Z,AB,AH,AJ,AK,AL,AM,AU,AV,AW,AX,AY,BA,BC,BF,BG,BJ,BM,BO,BP,BQ,BR,BS,CC,CE,CF,CG,CH,CI,CM,CN,CP,CT,CU,DA,DD,DH")
 data_out = pd.read_excel('GJR_data_simplified_161227.xls',header=0,parse_cols="B,P")
 
 print "Is YO DATA BOI!!! \n", metrics
 print "length of data ", metrics.size
 print metrics.columns
+print "data out"
+print metrics.sequence
+print data_out.columns
+
+ 
+######### ADD OUTPUT FROM DATA_OUT TO METRICS ######
+#iterate through sequence column in metrics and append 
+#the corressponding ec_50_rise to an array
+#then add the array as a column to metric called 'output'
+
+meas_out = []
+print len(metrics.index)
+# metrics.dropna(how='any') 
+
+# print "after drop, ", len(metrics.index)
+
+for row in range(0,len(metrics.index)):
+	indx_list = data_out[data_out[u'sequence'].str.contains(str(metrics.iloc[row][u'sequence']),na=False)].index.tolist()
+	if(len(indx_list)>0):
+		found_indx = indx_list[0]
+		found_out = data_out.iloc[found_indx][u'stability']
+		print row
+		meas_out.append(found_out)
+	else:
+		print "NOT FOUND"
+		meas_out.append('null')
+#meas_out = np.array(meas_out)
+mo_series = pd.Series(meas_out)
+#print "List of meas_out to add as col ", meas_out
+#meas_out[metrics.sequence]
+metrics['stability'] = mo_series.values
+#metrics[u'stability'] = meas_out
+print "NEW METRICS data: ", metrics.columns, metrics
+
+# for index, row in metrics.iterrows():
+# 	indx_list = data_out[data_out[u'sequence'].str.contains(str(row[u'sequence']),na=False)].index.tolist()
+# 	if(len(indx_list)>0):
+# 		found_indx = indx_list[0]
+# 		found_out = data_out.iloc[found_indx][u'stability']
+# 		print found_indx,found_out
+# 		meas_out.append(found_out)
+# print "List of meas_out to add as col ", meas_out
+
 #filter out data where stability is >=1
 #b = df[(df['a'] > 1)
 #df = pdata[(pdata[u'stability'] <1)]
+
 rawdata = pdata[pdata.stability < 1]
 rawdata = rawdata[pdata.sequence.str.len() == 43]
 #df = df.reindex(len(df))
