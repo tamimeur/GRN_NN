@@ -41,8 +41,10 @@ Y_test = []
 
 
 ############# LOAD DATA - DY BINDING DATASET ########
-metrics = pd.read_excel('GJR_design_metrics_161227.xls',header=0,parse_cols="C,E,G,I,K,N,O,P,S,T,W,Z,AB,AH,AJ,AK,AL,AM,AU,AV,AW,AX,AY,BA,BC,BF,BG,BJ,BM,BO,BP,BQ,BR,BS,CC,CE,CF,CG,CH,CI,CM,CN,CP,CT,CU,DA,DD,DH")
-data_out = pd.read_excel('GJR_data_simplified_161227.xls',header=0,parse_cols="B,P")
+#metrics = pd.read_excel('GJR_design_metrics_161227.xls',header=0,parse_cols="C,E,G,I,K,N,O,P,S,T,W,Z,AB,AH,AJ,AK,AL,AM,AU,AV,AW,AX,AY,BA,BC,BF,BG,BJ,BM,BO,BP,BQ,BR,BS,CC,CE,CF,CG,CH,CI,CM,CN,CP,CT,CU,DA,DD,DH")
+metrics = pd.read_excel('GJR_design_metrics_161227.xls',header=0)
+data_out = pd.read_excel('GJR_data_simplified_161227.xls',header=0,parse_cols="A,B,P")
+
 
 print "Is YO DATA BOI!!! \n", metrics
 print "length of data ", metrics.size
